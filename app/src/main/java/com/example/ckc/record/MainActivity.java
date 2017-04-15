@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.IdRes;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -44,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "CAO";
     private static final int OVER_SHRESHOLD = 1;
     private static final int UNDER_SHRESHOLD = 0;
+    private static final int CALLPHONE = 1;
+    private static final int MESPHONE = 2;
+    private static final int MICROPHONE = 3;
+    private static final int WRITEEXTERNAL = 4;
+
     private TextView recordState;
     private TextView voiceDB;
     private RadioButton messageMother;
@@ -62,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText threshold;
     private EditText phoneNo;
     private RadioGroup radioGroup;
+    String getNo;
 
 
     @Override
@@ -79,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                 {
                     case OVER_SHRESHOLD:
                         recordState.setText(recordState.getText() + "\n超过阈值");
-                        String getNo = phoneNo.getText().toString();
+                        getNo = phoneNo.getText().toString();
                         //停止录音
                         stopRecord();
                         stopDB();
@@ -87,54 +94,41 @@ public class MainActivity extends AppCompatActivity {
                         //复位按钮状态
                         btnPress = !btnPress;
                         /*获得checkbox状态，打电话 或者  发信息*/
-                        if(callMother.isChecked())
-                        {
-                            recordState.setText(recordState.getText() + "\n打电话给妈妈");
-
-                            //打电话
-                            //直接拨打电话
-                            Uri uri = Uri.parse("tel:" + getNo);
-                            Intent call = new Intent(Intent.ACTION_CALL, uri); //直接播出电话
-//                            Intent call = new Intent(Intent.ACTION_DIAL, uri); //显示拨打号码，未播出
-
-                            if(ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED)
-                            {
-                                if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.CALL_PHONE))//是否需要解释
+                        if(callMother.isChecked()) {
+                            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                                if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.CALL_PHONE))//是否需要解释
                                 {
-                                    Toast.makeText(MainActivity.this,"这是一个普通权限，对我很重要",Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(MainActivity.this, "需要打电话权限", Toast.LENGTH_SHORT).show();
                                 }
-                                //申请权限
-                                ActivityCompat.requestPermissions(MainActivity.this,);
-                            }
-                        /*模拟器和魅蓝note手机测试时，返回的值不一样，怎么统一呢？？？？？*/
-//                            if(PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CALL_PHONE))
-                            if(PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CALL_PHONE))
-                            {
-                                startActivity(call);
+//                              //申请权限
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CALL_PHONE}, CALLPHONE);
                             }
                             else
                             {
-                                //是否需要解释
-
-                                recordState.setText(recordState.getText() + "\n电话权限关闭");
-                                Toast.makeText(MainActivity.this,"电话权限关闭",Toast.LENGTH_SHORT).show();
+                                //打电话
+                                //直接拨打电话
+                                Uri uri = Uri.parse("tel:" + getNo);
+                                Intent call = new Intent(Intent.ACTION_CALL, uri); //直接播出电话
+//                                Intent call = new Intent(Intent.ACTION_DIAL, uri); //显示拨打号码，未播出
+                                recordState.setText(recordState.getText() + "\n拨打电话");
+                                startActivity(call);
                             }
                         }
                         else if(messageMother.isChecked())
                         {
-                            if(PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS))
+                            if(PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.SEND_SMS))
                             {
-                                recordState.setText(recordState.getText() + "\n发短信给妈妈");
-                                //停止录音
-                                //复位按钮状态
-                                //发信息
-                                doSendSMSTo(getNo,"testing---你宝宝发短信给你");
-//                            doSendMessage(getNo,"你宝宝哭了");
+                                if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.SEND_SMS))//是否需要解释
+                                {
+                                    Toast.makeText(MainActivity.this,"需要发信息权限",Toast.LENGTH_SHORT).show();
+                                }
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS},MESPHONE);
+
                             }
                             else
                             {
-                                recordState.setText(recordState.getText() + "\n信息权限关闭");
-                                Toast.makeText(MainActivity.this,"信息权限关闭",Toast.LENGTH_SHORT).show();
+                                recordState.setText(recordState.getText() + "\n发短信");
+                                doSendSMSTo(getNo,"testing---你宝宝发短信给你");
                             }
                         }
                         break;
@@ -577,10 +571,47 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode)
+        {
+            case CALLPHONE:
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    recordState.setText(recordState.getText() + "\n电话权限允许");
+                    //打电话
+                    //直接拨打电话
+                    Uri uri = Uri.parse("tel:" + getNo);
+                    Intent call = new Intent(Intent.ACTION_CALL, uri); //直接播出电话
+//                        Intent call = new Intent(Intent.ACTION_DIAL, uri); //显示拨打号码，未播出
+                    recordState.setText(recordState.getText() + "\n拨打电话");
+                    startActivity(call);
+                }
+                else
+                {
+                    recordState.setText(recordState.getText() + "\n电话权限禁止");
+                }
+                break;
+
+            case MESPHONE:
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    recordState.setText(recordState.getText() + "\n信息权限允许");
+                    recordState.setText(recordState.getText() + "\n发短信");
+                    doSendSMSTo(getNo,"testing---你宝宝发短信给你");
+                }
+                else
+                {
+                    recordState.setText(recordState.getText() + "\n信息权限禁止");
+                }
+                break;
+
+            case MICROPHONE:
+                break;
+
+            case WRITEEXTERNAL:
+                break;
+        }
+    }
 }
-
-
-/*如果没有权限
-* {
-* 是否需要解释
-* }*/
