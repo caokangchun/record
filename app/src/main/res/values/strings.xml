@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Record</string>
+    <string name="speaking">speaking</string>
+    <string name="waiting">waiting</string>
+    <string name="press_to_say">检测环境噪音</string>
+    <string name="record_end">结束检测</string>
+    <string name="dB">dB:</string>
+    <string name="enter_shreshold">请输入阈值</string>
+    <string name="mes">发信息</string>
+    <string name="call">打电话</string>
+    <string name="phoneNo">联系电话:</string>
+    <string name="contact_input">请输入联系电话</string>
+</resources>
