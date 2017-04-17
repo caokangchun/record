@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int UNDER_SHRESHOLD = 0;
     private static final int CALLPHONE = 1;
     private static final int MESPHONE = 2;
-    private static final int MICROPHONE = 3;
+    private static final int RECORDAUDIO = 3;
     private static final int WRITEEXTERNAL = 4;
 
     private TextView recordState;
@@ -223,7 +223,45 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if(!btnPress)
                 {
-                    startRecord();
+                    /*申请RECORD_AUDIO，writeExternal权限*/
+                    //如果没权限
+                    //申请权限
+
+//                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+//                    {
+//                        ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.RECORD_AUDIO},RECORDAUDIO);
+//                    }
+//                    //AUDIORECORD允许才继续申请权限，否则
+//                    //此处在选择对话框打开之前就已经执行，显然逻辑不对
+//                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
+//                    {
+//                        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+//                        {
+//                            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},WRITEEXTERNAL);
+//                        }
+//                        else
+//                        {
+//                            startRecord();
+//                        }
+//                    }
+//                    else
+//                    {
+//                        //不录音
+//                        btnPress = !btnPress;
+//                    }
+
+                    /*两个权限按顺序申请很容易不同步，应该两个权限一起申请*/
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO) !=
+                            PackageManager.PERMISSION_GRANTED ||
+                            ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                                    PackageManager.PERMISSION_GRANTED)
+                    {
+                        ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.RECORD_AUDIO},WRITEEXTERNAL);
+                    }
+                    else
+                    {
+                        startRecord();
+                    }
                 }
                 else
                 {
@@ -607,10 +645,28 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
 
-            case MICROPHONE:
+            case RECORDAUDIO:
                 break;
 
             case WRITEEXTERNAL:
+//                if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+//                {
+//                    recordState.setText(recordState.getText() + "\n写外部文件权限允许");
+//                    startRecord();
+//                }
+//                else
+//                {
+//                    recordState.setText(recordState.getText() + "\n写外部文件权限禁止");
+//                }
+                if(grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED)
+                {
+                    startRecord();
+                }
+                else
+                {
+                    recordState.setText(recordState.getText() + "\n权限禁止");
+                    btnPress = !btnPress;
+                }
                 break;
         }
     }
